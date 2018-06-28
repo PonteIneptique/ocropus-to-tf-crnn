@@ -21,7 +21,7 @@ python3 cli.py my_ocropus_data_directory --output tf-crnn
 ```
 
 **This will create a file "groundtruth.csv" in the directory
-`./tf-crnn/my_ocropus_data_directory`.** The image file links are
+`./tf-crnn/`.** The image file links are
 absolute path, which allows to move your groundtruth
 file to be moved along.
 
@@ -35,5 +35,5 @@ python3 cli.py ocropus/* --output tf-crnn
 ```
 
 Both these commands will create files in `tf-crnn/train` and
-`tf-crnn/test` named `groundtruth.csv`.
+`tf-crnn/test/` named `groundtruth.csv/`.
 

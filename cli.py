@@ -14,6 +14,7 @@ import glob
 #
 #################################################################################
 
+# Not used at the moment.
 CONFIG_DEFAULT = {  # From https://raw.githubusercontent.com/solivr/tf-crnn/master/config_template.json
   "training_params": {
     "learning_rate": 1e-3,
@@ -34,6 +35,9 @@ CONFIG_DEFAULT = {  # From https://raw.githubusercontent.com/solivr/tf-crnn/mast
 }
 SUB_COMMAND = "\t"
 DEBUG = False
+CHARACTERS = set()
+SEPARATOR_COLUMN = ";"  # Character for the columns in CSV
+SEPARATOR_CHARACTERS = "|"  # Character for separating input characters in ground truth
 
 #################################################################################
 #
@@ -111,25 +115,47 @@ def write_line(
         input_image, input_groundtruth,
         output_groundtruth
 ):
+    """ Write the TF-CRNN groundtruth line for given image file and ground truth
+
+    :param input_image: Name of the input image
+    :param input_groundtruth: Name of the ground truth text file that needs to be read
+    :param output_groundtruth: Name of the ground truth text file that needs to be written to
+    """
     with open(input_groundtruth) as f:
         content = f.read().strip()
 
+    # CHARACTERS.update(set(content))
+
     with open(output_groundtruth, "a") as f:
-        f.write(input_image+";"+"|"+"".join(char+"|" for char in content[:-1])+"\n")
+        f.write(
+            input_image + SEPARATOR_COLUMN +  # Input path is the first column
+            SEPARATOR_CHARACTERS +  # Ground truth is enclosed in `|`
+            SEPARATOR_CHARACTERS.join([  # Each character in separated by a |
+                char
+                for char in content
+            ]) +
+            "\n"  # Preparing for next line
+        )
 
 
 def run(source=(), target="output"):
     print_sep()
     print("Transforming data")
     for source_directory in source:
-        target_directory = os.path.join(target, os.path.basename(source_directory))
+        # If we have more than one input directory
+        if len(source) > 1:
+            target_directory = os.path.join(target, os.path.basename(source_directory))
 
-        # We compute absolute path for easier replacement later
-        abs_source_directory = os.path.abspath(source_directory)
+            # We compute absolute path for easier replacement later
+            abs_source_directory = os.path.abspath(source_directory)
 
-        # We create the directory that will be necessary
-        if not os.path.isdir(target_directory):
-            os.makedirs(target_directory, exist_ok=True)
+            # We create the directory that will be necessary
+            if not os.path.isdir(target_directory):
+                os.makedirs(target_directory, exist_ok=True)
+        else:
+            target_directory = target
+            abs_source_directory = os.path.abspath(target_directory)
+
         print_detail("Transforming {}'s data into {}'s data".format(
             source_directory, target_directory
         ))
@@ -147,6 +173,8 @@ def run(source=(), target="output"):
             )
             transformed += 1
         print_detail("{:,} lines referenced in {}".format(transformed, target_crnn_truthfile))
+    print_sep()
+    print_detail("Saving the character found")
 
 #################################################################################
 #
